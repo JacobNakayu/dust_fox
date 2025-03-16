@@ -1,10 +1,12 @@
 # UI Packages
 import tkinter as tk
 from tkinter import ttk
+# Other Packages
+from pathlib import Path
 # Fonts
 from styles import MAIN_TITLE, BODY_TEXT
 # Custom Widgets
-from widgets import ScrollableFrame
+from widgets import ScrollableFrame, FileTree
 # Global variables
 from settings import MIN_WIDTH, MIN_HEIGHT
 # Functions
@@ -77,27 +79,33 @@ class ScanPage(tk.Frame):
         # Configure the grid
         for i in range(0,3):
             self.grid_columnconfigure(i, weight=1)
+        
+        for i in range(0,4):
             self.grid_rowconfigure(i, weight=1)
         
         # Button to run scan
         scan_button = ttk.Button(self, text="Scan for Old Files", command=lambda: self.scan_from_click())
         scan_button.grid(row=0, column=0, columnspan=3, pady=10)
         
+        # Current directory label
+        self.cwd_label = ttk.Label(self, text=("No Scan Results"), background="white", anchor="center")
+        self.cwd_label.grid(row=1, column=0, columnspan=3, pady=10, sticky="we")
+        
         # Results widget
         results_panel = ScrollableFrame(self, 500, 0)
-        results_panel.grid(row=1, column=0, columnspan=3, padx=10, sticky="we")
+        results_panel.grid(row=2, column=0, columnspan=3, padx=10, sticky="we")
         self.results_frame = results_panel.scrollable_frame
         self.results_frame.config(bg="white")
+    
         self.results_frame.grid_columnconfigure(0, weight=1)
-        self.results_frame.grid_rowconfigure(0, weight=1)
         
         # Action Buttons
         delete_button = ttk.Button(self, text="Delete File", command=lambda: deleteFiles())
-        delete_button.grid(row=2, column=0, padx=10, pady=10)
+        delete_button.grid(row=3, column=0, padx=10, pady=10)
         open_file_button = ttk.Button(self, text="Open File", command=lambda: openFiles())
-        open_file_button.grid(row=2, column=1, padx=10, pady=10)
+        open_file_button.grid(row=3, column=1, padx=10, pady=10)
         exclude_file_button = ttk.Button(self, text="Exclude File", command=lambda: excludeFiles())
-        exclude_file_button.grid(row=2, column=2, padx=10, pady=10)
+        exclude_file_button.grid(row=3, column=2, padx=10, pady=10)
     
     def scan_from_click(self):
         self.scan_results = runScan()
@@ -107,15 +115,14 @@ class ScanPage(tk.Frame):
         #     print(Path.cwd())
         #     file.write(json.dumps(self.scan_results))
         
-        print(len(self.scan_results))
         for widget in self.results_frame.winfo_children():
             widget.destroy()
         
-        # for i, result in enumerate(self.scan_results):
-        #     result_label = ttk.Label(self.results_frame, text=str(result), background="white")
-        #     result_label.grid(row=i, column=0, sticky="nw", padx=10, pady=10)
+        self.results_tree = FileTree(self.results_frame, self.scan_results)
+        self.results_tree.grid(row=0, column=0, sticky="nsew")
         
-        
+        self.cwd_label.config(text=str(Path.home().resolve()))
+            
         
 
 class SettingsPage(tk.Frame):
