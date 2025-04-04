@@ -91,10 +91,11 @@ class FileTree(ttk.Treeview):
         if "dirs" in file_tree.keys():
             # For every subdirectory
             for dir_path in file_tree["dirs"].keys():
+                dir_object = file_tree["dirs"][dir_path]
                 # Create a unique id so we can identify it later
-                uid = uuid4()
+                uid = dir_object["path"]
                 # Add a line showing the name of the directory
-                self.insert(parent, 'end', uid, text=file_tree["dirs"][dir_path]["name"])
+                self.insert(parent, 'end', uid, text=dir_object["name"])
                 # Recursively call this function on the subdirectory
                 self.load_file_tree(uid, file_tree["dirs"][dir_path])
             
@@ -102,7 +103,7 @@ class FileTree(ttk.Treeview):
             for file_path in file_tree["files"].keys():
                 file_object = file_tree["files"][file_path]
                 # Create a unique id
-                uid = uuid4()
+                uid = file_object["path"]
                 # Add a line showing all the relevant info for the file
                 self.insert(parent, 'end', uid,\
                     text=file_object["name"],\
@@ -110,4 +111,19 @@ class FileTree(ttk.Treeview):
                                 file_object["created"],\
                                 file_object["accessed"],\
                                 file_object["modified"]])
+
+class FilterListTree(ttk.Treeview):
+    def __init__(self, parent, filter_list, *args, **kwargs):
+        # Initialize the Frame class
+        super().__init__(parent, *args, **kwargs)
         
+        self.load_filter_list(filter_list)
+    
+    def load_filter_list(self, filter_list):
+        for directory in filter_list:
+            uid = directory
+            self.insert('', 'end', uid, text=directory)
+
+    def empty_filter_list(self):
+        for item in self.get_children():
+            self.delete(item)

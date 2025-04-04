@@ -4,30 +4,23 @@ from pathlib import Path
 from datetime import datetime
 import shelve
 
+# Initializes the scan process and returns the final filesystem dictionary
 def runScan():
     print("Running Scan")
     home_dir = Path.home()     
     files_tree = {}
     
-    # for root, dirs, files in os.walk(home_dir):
-    #     if is_scanned(root):
-    #         files_tree[root] = {
-    #             "path": root,
-    #             "name": root.split('\\')[-1],
-    #             "dirs": [directory for directory in dirs if is_scanned(os.path.join(root, directory))],
-    #             # "files": [file for file in files if is_scanned(os.path.join(root, file))]
-    #             "files": [get_filestats(os.path.join(root, file)) for file in files if is_scanned(os.path.join(root, file))]
-    #         }
-     
-    files_tree = expand_dir(str(home_dir.resolve()))
+    with shelve.open(str(Path(Path.home(), '.dust_fox', 'df_user.shelve'))) as settings_dict:
+        files_tree = expand_dir(str(home_dir.resolve()), settings_dict)
+    
     print("scan done")
     return files_tree
 
 
-def is_scanned(root):
-    settings = shelve.open(str(Path(Path.home(), '.dust_fox', 'df_user.shelve')))
-    
-    root_separated = root.split('\\')
+# Checks whitelist/blacklist and hidden directory settings against a file
+def is_scanned(root, settings):
+    normalized_root = os.path.normpath(root) 
+    root_separated = normalized_root.split(os.sep)
     
     if root == str(Path.home()):
         return True
@@ -35,8 +28,9 @@ def is_scanned(root):
     if not settings["scan_hidden_dirs"] and any(part.startswith('.') for part in root_separated):
         return False
             
-    is_allowed = any(root.startswith(path) for path in settings["directory_list"])
-    if (settings["use_whitelist"] and is_allowed) or (not settings["use_whitelist"] and not is_allowed):
+    in_whitelist = any(root.startswith(path) for path in settings["whitelist"])
+    in_blacklist = any(root.startswith(path) for path in settings["blacklist"])
+    if in_whitelist and not in_blacklist:
         return True
     
 
@@ -45,8 +39,8 @@ def get_time(timestamp):
     date = datetime.fromtimestamp(timestamp)
     return date.strftime("%Y-%m-%d %H:%M:%S")
 
-def get_filestats(file_object):
-    # stats = file_object.stat()
+
+def get_filestats(file_object, settings):
     stats = os.stat(file_object)
     file_dict = {
         "path": file_object.path,
@@ -59,13 +53,18 @@ def get_filestats(file_object):
         "accessed": get_time(stats.st_atime),
         "modified": get_time(stats.st_mtime)
     }
+    
+    # Check whether to include the file
+    is_old = all((datetime.now() - datetime.fromtimestamp(time)).total_seconds()  > settings["days_since_touch"] * 86400 for time in [stats.st_atime, stats.st_mtime])
+    
+    
+    if is_old and is_scanned(file_dict["path"], settings):
+        return file_dict
+    else:
+        return False
 
-    return file_dict
 
-
-def expand_dir(pathname):
-    # Get the settings shelf
-    settings = shelve.open(str(Path(Path.home(), '.dust_fox', 'df_user.shelve')))
+def expand_dir(pathname, settings):
     
     # Establish the base structure for the directory dictionary
     dir_dict = {
@@ -85,19 +84,25 @@ def expand_dir(pathname):
                     if not settings["scan_hidden_dirs"] and item.name.startswith("."):
                         continue
                     
-                    # Check if the file matches the whitelist or blacklist condition
-                    is_allowed = any(item.path.startswith(path) for path in settings["directory_list"])
-                    if (settings["use_whitelist"] and is_allowed) or (not settings["use_whitelist"] and not is_allowed):
-                        dir_dict['dirs'][item.path] = expand_dir(item.path)
+                    if is_scanned(item.path, settings):
+                        item_dict = expand_dir(item.path, settings)
+                        
+                        # As long as there is at least one file or subdirectory
+                        if item_dict["dirs"] or item_dict["files"]:
+                            dir_dict['dirs'][item.path] = item_dict
                     
                 # If the item is a file
                 elif item.is_file():
-                    dir_dict['files'][item.path] = get_filestats(item)
+                    filestats = get_filestats(item, settings)
+                    if filestats:
+                        dir_dict['files'][item.path] = filestats
             
             # Skip directories we don't have permission to touch anyways
             except PermissionError as e:
                 print(f"Insufficient permissions on path object: {e}")
-                
+    
+      
+              
     return dir_dict
     
     

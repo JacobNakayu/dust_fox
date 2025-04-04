@@ -11,26 +11,8 @@ def load_defaults():
             # If the settings path doesn't exist, create it and the parent directory
             settings_path.parent.mkdir(exist_ok=True)
             
-            # Open the settings file and initialize the default setting
-            settings_file = shelve.open(str(settings_path), writeback=True)
-            settings_file.update({
-                "directory_list": [],
-                "use_whitelist": True,
-                "scan_hidden_dirs": False,
-            })
-            
-            # Populate the initial whitelist
-            for dirname in ["Desktop", "Documents", "Downloads", "Music", "Pictures", "Videos", "OneDrive"]:
-                # Check if the directory exists
-                dirpath = Path(Path.home(), dirname)
-                if dirpath.exists():
-                    # Append the main file directories to the whitelist
-                    settings_file["directory_list"].append(str(dirpath.resolve()))
-                    
-                              
-            # Save and close the settings file
-            settings_file.sync()
-            settings_file.close()
+            # Apply the default settings
+            revert_settings()
 
             return True
         
@@ -41,14 +23,14 @@ def load_defaults():
             
             # Ensure all the necessary settings exist
             # List settings
-            if "directory_list" not in set_keys:
+            if "whitelist" not in set_keys:
                 # Populate the initial whitelist
                 for dirname in ["Documents", "Downloads", "Music", "Pictures", "urMom"]:
                     # Check if the directory exists
                     dirpath = Path(Path.home(), dirname)
                     if dirpath.exists():
                         # Append 
-                        settings_file["directory_list"].append(str(dirpath.resolve()))
+                        settings_file["whitelist"].append(str(dirpath.resolve()))
                 
 
             
@@ -65,4 +47,38 @@ def load_defaults():
     except Exception as e:
         print(e)
         return False
+    
+def edit_settings(settings_dict, action):
+    settings_path = Path(Path.home(), '.dust_fox', 'df_user.shelve')
 
+    # Open the settings file and initialize the default setting
+    with shelve.open(str(settings_path), writeback=True) as settings_file:
+        if action == "overwrite":
+            for key, value in settings_dict.items():
+                if key in settings_file:
+                    settings_file[key] = value
+        
+        elif action == "append":
+            for key, value in settings_dict.items():
+                if key in settings_file:
+                    settings_file[key].append(value)
+
+def revert_settings():
+    settings_path = Path(Path.home(), '.dust_fox', 'df_user.shelve')
+    
+    # Open the settings file and initialize the default setting
+    with shelve.open(str(settings_path), writeback=True) as settings_file:
+        settings_file.update({
+            "whitelist": [],
+            "blacklist": [],
+            "days_since_touch": 30,
+            "scan_hidden_dirs": False,
+        })
+        
+        # Populate the initial whitelist
+        for dirname in ["Desktop", "Documents", "Downloads", "Music", "Pictures", "Videos", "OneDrive"]:
+            # Check if the directory exists
+            dirpath = Path(Path.home(), dirname)
+            if dirpath.exists():
+                # Append the main file directories to the whitelist
+                settings_file["whitelist"].append(str(dirpath.resolve()))
