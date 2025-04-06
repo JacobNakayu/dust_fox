@@ -1,6 +1,5 @@
 import  tkinter as tk
 from tkinter import ttk
-from uuid import uuid4
 
 # A frame with X and Y scroll bars
 class ScrollableFrame(tk.Frame):

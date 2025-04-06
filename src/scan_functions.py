@@ -3,6 +3,13 @@ import os
 from pathlib import Path
 from datetime import datetime
 import shelve
+import dbm.dumb
+import sys
+
+# Force shelve to use dbm.dumb backend
+shelve.DbfilenameShelf = shelve.Shelf
+shelve.open = lambda *args, **kwargs: shelve.Shelf(dbm.dumb.open(*args, **kwargs))
+
 
 # Initializes the scan process and returns the final filesystem dictionary
 def runScan():

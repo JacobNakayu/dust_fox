@@ -4,6 +4,8 @@ from tkinter import ttk
 # Other Packages
 from pathlib import Path
 import shelve
+import dbm.dumb
+import sys
 # Fonts
 from styles import MAIN_TITLE, BODY_TEXT
 # Custom Widgets
@@ -14,6 +16,10 @@ from settings import MIN_WIDTH, MIN_HEIGHT
 from scan_functions import runScan
 from results_functions import deleteFiles, openFiles, excludeFiles
 from settings_functions import load_defaults, edit_settings, revert_settings
+
+# Force shelve to use dbm.dumb backend
+shelve.DbfilenameShelf = shelve.Shelf
+shelve.open = lambda *args, **kwargs: shelve.Shelf(dbm.dumb.open(*args, **kwargs))
 
 # Main App Window
 class DustFoxApp(tk.Tk):
@@ -268,6 +274,10 @@ class SettingsPage(tk.Frame):
     def revert(self):
         revert_settings()
         self.get_settings()
+
+import sys
+print("Python:", sys.version)
+print("shelve module path:", shelve.__file__)
 
 if load_defaults():        
     app = DustFoxApp()
