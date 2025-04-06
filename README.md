@@ -23,20 +23,20 @@ You can customize the length of time a file must have been untouched (neither op
 ### Hidden Directories
 You can also toggle Dust Fox's ability to scan hidden directories or files. These directories and files usually contain configuration files and data for other software installed on your computer, so they should generally stay put. Scanning hidden directories and files is turned off by default, but you can select "True" from the dropdown menu to enable it.
 
-[!Note]
+> [!Note]
 > You can tell if a directory or file is hidden because it's name starts with a "." (like ".docker"). 
 
 ### Whitelist and Blacklist
 Dust Fox works with a whitelist and blacklist to determine what files to scan. This means that Dust Fox will scan any file or folder in the whitelist, but only as long as it is not also in the blacklist.
 
-[!Note]
+> [!Note]
 > Dust Fox only scans files within your account's home directory for security reasons.
 
 For example, your whitelist could include the file paths `Documents/` and `Downloads/` and your blacklist includes the paths `private_documents/` and `very_special_file.pdf`. If you ran a scan, Dust Fox would scan every file in the Documents and Downloads folders, except for anything in a folder called private_documents folder or any file named very_special_file.pdf. Dust Fox would also not scan the `Pictures/` folder because it was not included in the whitelist (unless Pictures is within Documents or Downloads).
 
 Dust Fox starts with some default folders in the whitelist, but you can add or remove file paths from either list as you like. It doesn't make sure the file paths you put in the "Add Path" text entries actually exist, though, so be sure to spell check yourself.
 
-[!Note]
+> [!Note]
 > You can usually get the full path of a file by opening your file browser, right clicking on the file, and selecting "Copy as Path" (or a similar option, depending on your operating system). Just remember to take off everything up to your home directory when you paste it in to the Add Path box!
 
 ### Settings Actions
