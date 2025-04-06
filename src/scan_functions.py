@@ -4,7 +4,6 @@ from pathlib import Path
 from datetime import datetime
 import shelve
 import dbm.dumb
-import sys
 
 # Force shelve to use dbm.dumb backend
 shelve.DbfilenameShelf = shelve.Shelf

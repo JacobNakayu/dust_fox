@@ -1,0 +1,13 @@
+## Standard Python Modules. No need to install separately
+# tkinter
+# pathlib
+# shelve
+# dbm.dumb
+# sys
+# os
+# platform
+# subprocess
+# datetime
+
+# External Modules
+send_2_trash
